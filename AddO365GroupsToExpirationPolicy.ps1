@@ -14,7 +14,20 @@ Connect-AzureAD
 
 
 Get-UnifiedGroup | Set-UnifiedGroup -CustomAttribute1 "Expire"
-Set-UnifiedGroup "GG" -CustomAttribute1 "DoNotExpire"
+
+[string[]]$Exceptions = @()
+
+do{
+$input = Read-Host " What is the name of the group that you would like to exclude?"
+$Exceptions += $input
+}
+until($input -eq "")
+
+$Count = $Exceptions.count - 1
+
+ForEach($i in $Count){
+    Set-UnifiedGroup  -Identity $Exceptions[$i] -CustomAttribute1 $null
+}
 
 $ExpireGroups = Get-UnifiedGroup | Where{$_.customAttribute1 -eq "Expire"}
 
@@ -32,7 +45,7 @@ ForEach($group in $ExpireGroups){
 
     Write-Host "Adding group" $group.DisplayName "to group expiration policy"
     
-    ## Remove-AzureADMSLifecyclePolicyGroup -GroupId $group.ExternalDirectoryObjectId -Id $PolicyId -ErrorAction SilentlyContinue
+    ##Remove-AzureADMSLifecyclePolicyGroup -GroupId $group.ExternalDirectoryObjectId -Id $PolicyId -ErrorAction SilentlyContinue
     Add-AzureADMSLifecyclePolicyGroup -GroupId $group.ExternalDirectoryObjectId -Id $PolicyId -ErrorAction SilentlyContinue
     
     Set-UnifiedGroup -Identity $group.externalDirectoryobjectID -CustomAttribute2 $PolicyId
